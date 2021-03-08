@@ -2,13 +2,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include "inputManager.h"
+#include "draw.h"
 
 #define WW 640
 #define WH 480
 
-bool quit = false;
-
-SDL_Texture *createTexture(SDL_Renderer *renderer, const char* filename);
+InputManager InputManager::s_InputManager;
 int main()
 {
     // Initialize SDL, Only need video subsystem.
@@ -48,57 +47,27 @@ int main()
         return -1;
     }
 
-    SDL_Texture *texNone  = createTexture(rend, "res/none.png");
-    SDL_Texture *texArrow = createTexture(rend, "res/arrowkeys.png");
-    SDL_Texture *texMouse = createTexture(rend, "res/mouseclick.png");
-    SDL_Rect rectTexArrow = {158, 0, 158, 254};
-    SDL_Rect tmpRect;
-
     SDL_Event e;
-    while(!quit)
+    InputManager& s_input = InputManager::getInstance();
+    Draw& s_draw = Draw::getInstance();
+    s_draw.setWinRef(win);
+    s_draw.initTextures(rend);
+    s_draw.setRenderElem(TEX_NONE, 0.0, SDL_FLIP_NONE);
+    
+    SDL_SetRenderDrawColor(rend, 64, 32, 128, 255);
+    while(!s_input.shouldQuit())
     {
-        SDL_PollEvent(&e);
-        switch(e.type)
-        {
-            case(SDL_KEYDOWN):
-                switch(e.key.keysym.sym)
-                    case(SDLK_ESCAPE):
-            case(SDL_QUIT):
-            {
-                quit = true;
-                break;
-            }
-        }
+        s_input.update();
 
-        SDL_SetRenderDrawColor(rend, 128, 128, 64, 255);
         SDL_RenderClear(rend);
 
-        SDL_RenderCopy(rend, texArrow, NULL, NULL);
+        s_draw.renderElem(rend);
 
         SDL_RenderPresent(rend);
     }
 
+    s_draw.freeTextures();
     IMG_Quit();
     SDL_Quit();
     return 0;
-}
-
-SDL_Texture *createTexture(SDL_Renderer *renderer, const char* filename)
-{
-    SDL_Surface *temp = IMG_Load(filename);
-    if(!temp)
-    {
-        std::cout << "IMG_Load: " << IMG_GetError() << std::endl;
-        return NULL;
-    }
-
-    SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, temp);
-    if(!tex)
-    {
-        std::cout << "SDL_CreateTextureFromSurface: " << SDL_GetError() << std::endl;
-        return NULL;
-    }
-
-    SDL_FreeSurface(temp);
-    return tex;
 }

@@ -1,28 +1,49 @@
 #ifndef INPUT_MANAGER_H
 #define INPUT_MANAGER_H
 
+#include <SDL2/SDL.h>
+#include "draw.h"
+
+enum INPUT
+{
+    I_KESC, I_KLEFT, I_KRIGHT, I_KUP, I_KDOWN, I_MLEFT, I_MRIGHT, I_UNDEFINED
+};
 class InputManager
 {
 public:
-    // This should implement the Singleton pattern.
-    // needs improvements to the header file.
-    static InputManager* GetInstance();
-    bool Update();
+    InputManager(const InputManager&) = delete;
+
+    static InputManager& getInstance()
+    {
+        return s_InputManager;
+    }
+
+    bool update();
+    bool shouldQuit(){return quit;}
 
     // Keyboard
-    bool KeyDown(int iKeyIndex);
-    bool KeyStillDown(int iKeyIndex);
-    bool KeyUp(int iKeyIndex);
-    bool KeyStillUp(int iKeyIndex);
+    bool keyDown(int iKeyIndex);
+    bool keyStillDown(int iKeyIndex);
+    bool keyUp(int iKeyIndex);
+    bool keyStillUp(int iKeyIndex);
+    bool noInput();
 
     // Mouse
-    bool MouseDown(int iButton);
-    bool MouseStillDown(int iButton);
-    bool MouseUp(int iButton);
-    bool MouseStillUp(int iButton);
+    bool mouseDown(int iButton);
+    bool mouseStillDown(int iButton);
+    bool mouseUp(int iButton);
+    bool mouseStillUp(int iButton);
 
 private:
-    // Make private helper methods here!
+    InputManager() {}
+    static InputManager s_InputManager;
+    
+    Draw& s_draw = Draw::getInstance();
+    bool quit = false;
+    SDL_Event e;
+    bool input[8] = {0};
+
+    INPUT translateInputCode(int sdlInputCode);
 };
 
 #endif //INPUT_MANAGER_H
